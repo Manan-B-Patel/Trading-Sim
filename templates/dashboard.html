@@ -1,0 +1,889 @@
+{% extends "layout.html" %} 
+{% block content %} 
+    <!-- TradingView Widget BEGIN -->
+    <!-- TradingView Widget BEGIN -->
+    <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>  
+    {
+        "symbols": [
+        {
+            "proName": "FOREXCOM:SPXUSD",
+            "title": "S&P 500"
+        },
+        {
+            "proName": "FOREXCOM:NSXUSD",
+            "title": "US 100"
+        },
+        {
+            "proName": "FX_IDC:EURUSD",
+            "title": "EUR/USD"
+        },
+        {
+            "proName": "BITSTAMP:BTCUSD",
+            "title": "Bitcoin"
+        },
+        {
+            "proName": "BITSTAMP:ETHUSD",
+            "title": "Ethereum"
+        },
+        {
+            "description": "SPY",
+            "proName": "AMEX:SPY"
+        },
+        {
+            "description": "TESLA",
+            "proName": "NASDAQ:TSLA"
+        },
+        {
+            "description": "MICROSOFT",
+            "proName": "NASDAQ:MSFT"
+        },
+        {
+            "description": "AMAZON",
+            "proName": "NASDAQ:AMZN"
+        },
+        {
+            "description": "APPLE",
+            "proName": "NASDAQ:AAPL"
+        },
+        {
+            "description": "GOOGLE",
+            "proName": "NASDAQ:GOOG"
+        },
+        {
+            "description": "PAYPAL",
+            "proName": "NASDAQ:PYPL"
+        },
+        {
+            "description": "AIRBNB",
+            "proName": "NASDAQ:ABNB"
+        },
+        {
+            "description": "LUCID",
+            "proName": "NASDAQ:LCID"
+        }
+        ],
+        "showSymbolLogo": true,
+        "colorTheme": "dark",
+        "isTransparent": false,
+        "displayMode": "adaptive",
+        "locale": "in"
+    }
+    </script>
+    </div>
+{% endblock content%}
+    
+{% block content2 %} 
+  <!-- TradingView Widget END -->
+<div class = "row">
+    <div class = "column">
+        <div id ="switcherLegend"></div>
+        <div id="chart"></div>
+        <div id="axis"></div>
+    </div>
+    
+    <div>&nbsp;</div> 
+    <div class = "column">
+    <div class = "panel">
+        <div class = "title">
+            <h1>
+                {{stock}}
+            </h1>
+            <h2>
+                <div id="price"></div>
+            </h2>
+            <hr size = "10" width = "100%" color = "white">
+        </div>
+            <h5>
+                Total Earnings:
+            </h5>
+        <div>&nbsp;</div> 
+        <div class = "earnings">
+            <h6>
+                0.0
+            </h6>
+        </div>
+        <div>&nbsp;</div> 
+            <h5>
+                Earnings:
+            </h5>
+        <div>&nbsp;</div> 
+        <div class = "earnings">
+            <h6>
+                0.0
+            </h6>
+        </div>
+        <hr size = "10" width = "100%" color = "white">
+            <h5>
+                # of Shares
+            </h5>
+        <div class = "evenly-distributed-children">
+            <form method = "POST" id="BUY">
+                {{ form.hidden_tag() }}
+                {% if form.shares.errors %}
+                    {{ form.shares(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.shares.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.shares(class="form-control form-control-lg") }}                                    
+                {% endif %}
+                {{ form.submit(class="button-27", id="buy", onClick = "buy()") }}
+            </form>
+            <form method = "POST">
+                {{ sell.hidden_tag() }}
+                {{ sell.submit(class="button-28", onClick = "sell()") }}
+            </form>
+        </div>
+        <div class = "earnings">
+            <div>&nbsp;</div> 
+            <h5>
+                Number of Shares ----------------------------- {{numShares}}
+            </h5>
+            <div>&nbsp;</div> 
+            <h5>
+                Bought Price ----------------------------------- {{boughtPrice}}
+            </h5>            
+            <div>&nbsp;</div> 
+            <h5>
+                Sold Price -------------------------------------- 0
+            </h5>
+        </div>
+    </div>
+    </div>
+
+    <script stock = {{stock}} interval = {{interval}} shares = {{numShares}} type='text/javascript'> 
+        var currentBar = {};
+        let trades = [];
+        let sumOfShares = 0;
+
+        function sell()
+        {
+            console.log("confimred")
+        }
+
+        function buy()
+        {
+            boughtPrice = currentBar.close;
+            $(document).ready(function() {
+                $('buy').click( function(e){
+                  e.preventDefault();
+                  $.ajax({
+                    type : 'POST',
+                    url : '{{ url_for('dashboard') }}',
+                    data : {
+                      boughtPrice : boughtPrice,
+                    },
+                  });
+                });
+              });
+    
+        }
+
+        stock = document.currentScript.getAttribute('stock');
+        interval = document.currentScript.getAttribute('interval');
+
+        var chartEl = document.getElementById('chart');
+        var axisEl = document.getElementById('axis');
+
+        var chart = LightweightCharts.createChart(chartEl, {
+            width: 1250,
+            height: 500,
+            layout: {
+                backgroundColor: '#131724',
+                textColor: 'rgba(255, 255, 255, 0.9)',
+            },
+            rightPriceScale: {
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1,
+                },
+                borderVisible: true,
+            },
+            grid: {
+                vertLines: {
+                    color: 'rgba(197, 203, 206, 0.2)',
+                },
+                horzLines: {
+                    color: 'rgba(197, 203, 206, 0.2)',
+                },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Magnet,
+            },
+            priceScale: {
+                borderColor: 'rgba(197, 203, 206, 0.5)',
+            },
+            timeScale: {
+                borderColor: 'rgba(197, 203, 206, 0.5)',
+                timeVisible: true,
+            },
+        });
+
+        var axis = LightweightCharts.createChart(axisEl, {
+            width: 1250,
+            height: 400,
+            layout: {
+                backgroundColor: '#131724',
+                textColor: 'rgba(255, 255, 255, 0.9)',
+            },
+            rightPriceScale: {
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1,
+                },
+                borderVisible: true,
+            },
+            grid: {
+                vertLines: {
+                    color: 'rgba(197, 203, 206, 0.2)',
+                },
+                horzLines: {
+                    color: 'rgba(197, 203, 206, 0.2)',
+                },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Magnet,
+            },
+            priceScale: {
+                borderColor: 'rgba(197, 203, 206, 0.5)',
+            },
+            timeScale: {
+                borderColor: 'rgba(197, 203, 206, 0.5)',
+                timeVisible: true,    
+            },
+        });
+        
+        var candleSeries = chart.addCandlestickSeries();
+        var areaSeries = axis.addAreaSeries({
+            topColor: 'rgba(38,198,218, 0.56)',
+            bottomColor: 'rgba(38,198,218, 0.04)',
+            lineColor: 'rgba(38,198,218, 1)',
+            lineWidth: 2,
+        });
+        var volumeSeries = axis.addHistogramSeries({
+            color: '#26a69a',
+            lineWidth: 2,
+            priceFormat: {
+                type: 'volume',
+            },
+            overlay: true,
+            scaleMargins: {
+                top: 0.8,
+                bottom: 0,
+            },
+        });
+
+        let isCrossHairMoving = false;
+        axis.subscribeCrosshairMove(param2 => {
+            chart.subscribeCrosshairMove(param => {
+                if (!param.point) return;
+                if (!param.time) return;
+                if (isCrossHairMoving) return;
+
+                isCrossHairMoving = true;
+                axis.moveCrosshair(param2.point);
+                isCrossHairMoving = false;
+
+                if (!param2.point) return;
+                if (!param2.time) return;
+                if (isCrossHairMoving) return;
+
+                
+                isCrossHairMoving = true;
+                chart.moveCrosshair(param.point);
+                isCrossHairMoving = false;
+            });
+
+        });
+
+        var isChartActive = false;
+        var isAxisActive = false;
+        chartEl.addEventListener("mousemove", () => {
+            if (isChartActive) return;
+            isChartActive = true;
+            isAxisActive = false;
+            chart.applyOptions({
+                crosshair: {
+                horzLine: {
+                    visible: true,
+                    labelVisible: true
+                }
+                }
+            });
+            axis.applyOptions({
+            crosshair: {
+            horzLine: {
+                visible: false,
+                labelVisible: false
+            }
+            }
+        });
+        });
+
+        axisEl.addEventListener("mousemove", () => {
+            if (isAxisActive) return;
+            isAxisActive = true;
+            isChartActive = false;
+            axis.applyOptions({
+                crosshair: {
+                horzLine: {
+                    visible: true,
+                    labelVisible: true
+                }
+                }
+            });
+            chart.applyOptions({
+                crosshair: {
+                horzLine: {
+                    visible: false,
+                    labelVisible: false
+                }
+                }
+            });
+        });
+
+        chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        axis.timeScale().setVisibleLogicalRange(range)
+        })
+        axis.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        chart.timeScale().setVisibleLogicalRange(range)
+        })
+
+        let headers = new Headers();
+        headers.append("Access-Control-Allow-Origin", "*")
+        headers.append('Access-Control-Allow-Credentials', true);
+
+        var line = chart.addLineSeries({
+            color: 'rgba(225, 43, 209, 1)',
+            lineWidth: 2,
+        });
+
+        var line5 = chart.addLineSeries({
+            color: 'rgba(235, 255, 43, 1)',
+            lineWidth: 2,
+        });
+
+        var linePredict = chart.addLineSeries({
+            color: 'rgba(255, 164, 0, 1)',
+            lineWidth: 2,
+        });
+
+        var linePredictUpper = chart.addLineSeries({
+            color: 'rgba(255, 164, 0, 1)',
+            lineWidth: 1,
+        });
+
+        var linePredictLower = chart.addLineSeries({
+            color: 'rgba(255, 164, 0, 1)',
+            lineWidth: 1,
+        });
+
+        var areaPredict = chart.addCandlestickSeries({
+            upColor: '#FFAF19',
+            downColor: '#FFAF19'
+        })
+
+    
+        function calculateSMA(data, count){
+            var avg = function(data) {
+                var sum = 0;
+                for (var i = 0; i < data.length; i++) {
+                sum += data[i].close;
+                }
+                return sum / data.length;
+            };
+            var result = [];
+            for (var i=count - 1, len=data.length; i < len; i++){
+                var val = avg(data.slice(i - count + 1, i));
+                result.push({ time: data[i].time, value: val});
+            }
+            return result;
+        }
+
+        url6 = 'http://127.0.0.1:5000/predict/'+ stock + '/' + interval;
+        fetch(url6, {
+            mode : 'no-cors',
+            credentials : 'include',
+            method : 'GET',
+            headers : headers,
+        })
+        .then((r) => r.json())
+        .then((response) => {
+            forecast = response.map(element => ({
+                time: element.ds / 1000,
+                value: element.yhat,
+            }));
+
+            linePredict.setData(forecast)
+            
+            forecastLower = response.map(element => ({
+                time: element.ds / 1000,
+                value: element.yhatLower,
+            }));
+
+            console.log(forecastLower)
+            linePredictLower.setData(forecastLower);
+
+            forecastUpper = response.map(element => ({
+                time: element.ds / 1000,
+                value: element.yhatUpper,
+            }));
+
+            console.log(forecastUpper);
+            linePredictUpper.setData(forecastUpper);
+
+            forecastArea = response.map(element => ({
+                time: element.ds / 1000,
+                open: element.yhatUpper,
+                high: element.yhatUpper,
+                low: element.yhatLower,
+                close : element.yhatLower,
+            }));
+
+            console.log(forecastArea);
+            //areaPredict.setData(forecastArea);
+            
+        })
+        
+        url = 'http://127.0.0.1:5000/graph/' + stock + '/' + interval;
+        fetch(url, {
+            mode : 'no-cors',
+            credentials : 'include',
+            method : 'GET',
+            headers : headers,
+        })
+        .then((r) => r.json())
+        .then((response) => {
+            
+            data = response[1];
+            val = response[2];
+
+            ohlc = data.map(bar => (
+            {
+                time: bar.t / 1000,
+                open: bar.o,
+                high: bar.h,
+                low: bar.l,
+                close : bar.c,
+            }));
+            if(val != null){
+                ohlcAppend = val.map(bar => (
+                    {
+                        time: bar.t / 1000,
+                        open: bar.o,
+                        high: bar.h,
+                        low: bar.l,
+                        close : bar.c,
+                    }
+                ));
+
+                areaAppend = val.map(bar => (
+                {
+                    time: bar.t / 1000,
+                    value: bar.v / 1000,
+                }
+                ));
+
+                vol = [];
+
+                for(let i = 0; i < val.length; i++){
+                    currentKey = val[i];
+                    if(i == 0){
+                        color = 'rgba(255,82,82, 0.8)';
+                    }else {
+                        x = i-1;
+                        previousKey = val[x];
+                        if(previousKey.v > currentKey.v){
+                            color = 'rgba(255,82,82, 0.8)';
+                        }
+                        else{
+                        color = 'rgba(0, 150, 136, 0.8)';
+                        }
+                    }
+                    values = {
+                        time: currentKey.t / 1000,
+                        value: currentKey.v / 1000,
+                        color: color,
+                    };
+                    vol.push(values);
+                }
+            } else {
+                ohlcAppend = [];
+                areaAppend = [];
+                vol = [];
+            }               
+                
+            total = ohlc.concat(ohlcAppend);
+            currentBar = total[total.length-1];
+            document.getElementById('price').innerHTML = currentBar.close
+            candleSeries.setData(total);
+            dataLine = calculateSMA(total, 100);
+            dataLine5 = calculateSMA(total, 10);
+            line.setData(dataLine);
+            line5.setData(dataLine5);
+
+            area = data.map(bar => (
+                {
+                    time: bar.t / 1000,
+                    value: bar.v / 1000,
+                }
+            ));
+
+            areaseries = area.concat(areaAppend);
+            currentArea = areaseries[areaseries.length-1];
+            areaSeries.setData(areaseries);
+
+            volume = [];
+            for(let i = 0; i < data.length; i++){
+                currentKey = data[i];
+                if(i == 0){
+                    color = 'rgba(255,82,82, 0.8)';
+                }else {
+                    x = i-1;
+                    previousKey = data[x];
+                    if(previousKey.v > currentKey.v){
+                        color = 'rgba(255,82,82, 0.8)';
+                    }
+                    else{
+                    color = 'rgba(0, 150, 136, 0.8)';
+                    }
+                }
+                values = {
+                    time: currentKey.t / 1000,
+                    value: currentKey.v / 1000,
+                    color: color,
+                };
+                volume.push(values);
+            }
+
+            
+            volumeseries = volume.concat(vol);
+            volumeSeries.setData(volumeseries);
+        })
+        
+        
+        url5 = "wss://stream.data.alpaca.markets/v2/iex";
+        const socket = new WebSocket(url5);
+        const auth = {"action": "auth", "key": "PKVKLLJKRAFKYNB1CVNU", "secret": "do0dh8LL62VtNwCB4Y0cUV0vvlJwkcYMrDl8ro1g"}
+        const subscribe = {"action":"subscribe","trades":["" + stock],"quotes":["" + stock],"bars":["" + stock]}
+
+        socket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+
+            if(data[0]['msg'] == 'connected'){
+                socket.send(JSON.stringify(auth));
+            }
+
+            if(data[0]['msg'] == 'authenticated'){
+                socket.send(JSON.stringify(subscribe));
+            }
+
+            for(var key in data) {
+
+                const type = data[key].T;
+
+                if (type == 'q') {
+                    //console.log('got a quote');
+                    //console.log(data[key]);
+                }
+
+                if(type == 't') {
+                    console.log('got a trade');
+                    console.log(data[key]);
+
+                    trades.push(data[key].p)
+                    var open = trades[0];
+                    var close = trades[trades.length-1];
+                    var high = Math.max(...trades);
+                    var low = Math.min(...trades);
+
+                    candleSeries.update({
+                        time: currentBar.time + 60,
+                        open: open,
+                        high: high,
+                        low: low,
+                        close: close,
+                    })
+                    
+                    document.getElementById('price').innerHTML = close;
+
+                    sumOfShares += close*data[key].s;
+                    areaSeries.update({
+                        time: currentBar.time + 60,
+                        value: sumOfShares / 1000,
+                    });
+                    
+                }
+
+                if(type == 'b') {
+                    console.log('got a bar');
+                    console.log(data[key]);
+
+                    var bar = data[key];
+                    var timestamp = new Date(bar.t).getTime() / 1000;
+                    currentBar = {
+                        time: timestamp,
+                        open: bar.o,
+                        high: bar.h,
+                        low: bar.l,
+                        close: bar.c,
+
+                    };
+                    document.getElementById('price').innerHTML = currentBar.close;
+
+                    candleSeries.update(currentBar);
+                    trades = [];
+                    
+                    currentArea = {
+                        time: timestamp,
+                        value: bar.v / 1000,
+                    };
+
+                    var previousBar = vol[vol.length-1];
+                    if(previousBar.v > bar.v){
+                        color = 'rgba(255,82,82, 0.8)';
+                    } else {
+                        color = 'rgba(0, 150, 136, 0.8)';
+                    }
+
+                    currentVolume = {
+                        time: timestamp,
+                        value: bar.v / 1000,
+                        color: color,
+                    }
+
+                    volumeSeries.update(currentVolume);
+                    
+                    areaSeries.update(currentArea);
+
+                    sumOfShares = 0;                        
+                }
+            }
+        }
+
+        function getPredictions(){
+            return new Promise((resolve, reject) => {
+                url = 'http://127.0.0.1:5000/predict/';
+                fetch(url, {
+                    mode : 'no-cors',
+                    credentials : 'include',
+                    method : 'GET',
+                    headers : headers,
+                })
+                .then((r) => {return r.json()})
+                .then((response) => {
+                    resolve(response);
+                })
+            })
+        }         
+    </script>
+<div>
+    
+<div>&nbsp;</div> 
+<div class = "row">
+  
+  <div>&nbsp;</div> 
+  <div>&nbsp;</div> 
+  
+  <!-- TradingView Widget BEGIN -->
+  
+    <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
+        {
+        "feedMode": "market",
+        "market": "stock",
+        "colorTheme": "dark",
+        "isTransparent": false,
+        "displayMode": "regular",
+        "width": 480,
+        "height": 830,
+        "locale": "en"
+        }
+        </script>
+    </div>
+    
+    <div>&nbsp;</div> 
+    <div>&nbsp;</div> 
+    <!-- TradingView Widget BEGIN -->
+    <!-- TradingView Widget BEGIN -->
+    <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-hotlists.js" async>
+        {
+        "colorTheme": "dark",
+        "dateRange": "12M",
+        "exchange": "US",
+        "showChart": true,
+        "locale": "en",
+        "largeChartUrl": "",
+        "isTransparent": false,
+        "showSymbolLogo": false,
+        "showFloatingTooltip": true,
+        "width": "600",
+        "height": "830",
+        "plotLineColorGrowing": "rgba(41, 98, 255, 1)",
+        "plotLineColorFalling": "rgba(41, 98, 255, 1)",
+        "gridLineColor": "rgba(240, 243, 250, 0)",
+        "scaleFontColor": "rgba(106, 109, 120, 1)",
+        "belowLineFillColorGrowing": "rgba(41, 98, 255, 0.12)",
+        "belowLineFillColorFalling": "rgba(41, 98, 255, 0.12)",
+        "belowLineFillColorGrowingBottom": "rgba(41, 98, 255, 0)",
+        "belowLineFillColorFallingBottom": "rgba(41, 98, 255, 0)",
+        "symbolActiveColor": "rgba(41, 98, 255, 0.12)"
+        }
+        </script>
+  </div>
+  <!-- TradingView Widget END -->
+  <!-- TradingView Widget END -->
+  <!-- TradingView Widget BEGIN -->
+  
+  <div>&nbsp;</div> 
+  <div>&nbsp;</div> 
+  <div class = "evenly-distributed-children">
+    <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
+    {
+    "width": 770,
+    "height": 830,
+    "symbolsGroups": [
+      {
+        "name": "Indices",
+        "originalName": "Indices",
+        "symbols": [
+          {
+            "name": "FOREXCOM:SPXUSD",
+            "displayName": "S&P 500"
+          },
+          {
+            "name": "FOREXCOM:NSXUSD",
+            "displayName": "US 100"
+          },
+          {
+            "name": "FOREXCOM:DJI",
+            "displayName": "Dow 30"
+          },
+          {
+            "name": "INDEX:NKY",
+            "displayName": "Nikkei 225"
+          },
+          {
+            "name": "INDEX:DEU40",
+            "displayName": "DAX Index"
+          },
+          {
+            "name": "FOREXCOM:UKXGBP",
+            "displayName": "UK 100"
+          }
+        ]
+      },
+      {
+        "name": "Futures",
+        "originalName": "Futures",
+        "symbols": [
+          {
+            "name": "CME_MINI:ES1!",
+            "displayName": "S&P 500"
+          },
+          {
+            "name": "CME:6E1!",
+            "displayName": "Euro"
+          },
+          {
+            "name": "COMEX:GC1!",
+            "displayName": "Gold"
+          },
+          {
+            "name": "NYMEX:CL1!",
+            "displayName": "Crude Oil"
+          },
+          {
+            "name": "NYMEX:NG1!",
+            "displayName": "Natural Gas"
+          },
+          {
+            "name": "CBOT:ZC1!",
+            "displayName": "Corn"
+          }
+        ]
+      },
+      {
+        "name": "Bonds",
+        "originalName": "Bonds",
+        "symbols": [
+          {
+            "name": "CME:GE1!",
+            "displayName": "Eurodollar"
+          },
+          {
+            "name": "CBOT:ZB1!",
+            "displayName": "T-Bond"
+          },
+          {
+            "name": "CBOT:UB1!",
+            "displayName": "Ultra T-Bond"
+          },
+          {
+            "name": "EUREX:FGBL1!",
+            "displayName": "Euro Bund"
+          },
+          {
+            "name": "EUREX:FBTP1!",
+            "displayName": "Euro BTP"
+          },
+          {
+            "name": "EUREX:FGBM1!",
+            "displayName": "Euro BOBL"
+          }
+        ]
+      },
+      {
+        "name": "Forex",
+        "originalName": "Forex",
+        "symbols": [
+          {
+            "name": "FX:EURUSD",
+            "displayName": "EUR/USD"
+          },
+          {
+            "name": "FX:GBPUSD",
+            "displayName": "GBP/USD"
+          },
+          {
+            "name": "FX:USDJPY",
+            "displayName": "USD/JPY"
+          },
+          {
+            "name": "FX:USDCHF",
+            "displayName": "USD/CHF"
+          },
+          {
+            "name": "FX:AUDUSD",
+            "displayName": "AUD/USD"
+          },
+          {
+            "name": "FX:USDCAD",
+            "displayName": "USD/CAD"
+          }
+        ]
+      }
+    ],
+    "showSymbolLogo": true,
+    "colorTheme": "dark",
+    "isTransparent": false,
+    "locale": "en"
+  }
+    </script>
+  </div>
+</div>
+  <!-- TradingView Widget END -->
+</div>
+  <!-- TradingView Widget END -->
+{% endblock content2 %}
+    
+
