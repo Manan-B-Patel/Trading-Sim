@@ -404,7 +404,7 @@
             return result;
         }
 
-        url6 = 'http://127.0.0.1:5000/predict/'+ stock + '/' + interval;
+        url6 = 'https://trading-sim-manan.onrender.com/predict/'+ stock + '/' + interval;
         fetch(url6, {
             mode : 'no-cors',
             credentials : 'include',
@@ -449,7 +449,7 @@
             
         })
         
-        url = 'http://127.0.0.1:5000/graph/' + stock + '/' + interval;
+        url = 'https://trading-sim-manan.onrender.com/graph/' + stock + '/' + interval;
         fetch(url, {
             mode : 'no-cors',
             credentials : 'include',
